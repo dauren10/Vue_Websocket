@@ -1,11 +1,11 @@
 <template>
     <div class="appContent pt-2">
 
-        <div class="chatItem">
+        <div class="chatItem" v-for="(message, index) in messages" :key="index">
             <img src="/assets/img/sample/avatar6.jpg" alt="avatar" class="avatar">
             <div class="content">
                 <div class="bubble">
-                    Hey John, can we talk soon?
+                    {{ message }}
                 </div>
                 <footer>6 mins ago</footer>
             </div>
@@ -92,9 +92,9 @@
                     <i class="icon ion-ios-camera"></i>
                 </button>
             </div>
-            <form class="formArea">
-                <input type="text" class="form-control">
-                <button type="button" class="btn btn-primary btn-icon">
+            <form class="formArea" >
+                <input type="text" class="form-control" v-model="message" >
+                <button type="button" class="btn btn-primary btn-icon" @click="sendMessage()">
                     <i class="icon ion-ios-send"></i>
                 </button>
             </form>
@@ -109,35 +109,39 @@ export default {
 
     data() {
         return {
-            messages: []
+            messages: [],
+            chatSocket: null,
+            message:null,
         };
     },
 
-
+    methods: {
+        sendMessage() {
+            this.chatSocket.send(
+                JSON.stringify({
+                    message: this.message
+                })
+            );
+            this.message = null;
+        }
+    },
     mounted() {
-        let chatSocket = new WebSocket(
+        this.chatSocket = new WebSocket(
             `ws://localhost:8000/ws/chat/new/`
         );
-        chatSocket.onmessage = e => {
+        this.chatSocket.onmessage = e => {
             const data = JSON.parse(e.data);
             const message = data.message;
+            console.log(message)
             this.messages.push(message);
         };
 
-        chatSocket.onclose = e => {
+        this.chatSocket.onclose = e => {
             console.error("chat socket closed unexpectedly!");
         };
     },
 
 
-    //   sendMessage() {
-    //     this.chatSocket.send(
-    //       JSON.stringify({
-    //         message: this.message
-    //       })
-    //     );
 
-    //     this.message = "";
-    //   }
 }
 </script>
