@@ -92,8 +92,8 @@
                     <i class="icon ion-ios-camera"></i>
                 </button>
             </div>
-            <form class="formArea" >
-                <input type="text" class="form-control" v-model="message" >
+            <form class="formArea">
+                <input type="text" class="form-control" v-model="message">
                 <button type="button" class="btn btn-primary btn-icon" @click="sendMessage()">
                     <i class="icon ion-ios-send"></i>
                 </button>
@@ -111,11 +111,20 @@ export default {
         return {
             messages: [],
             chatSocket: null,
-            message:null,
+            message: null,
         };
     },
 
     methods: {
+        getChats() {
+            const url = `${API_URL}chats/`;
+            return axios.get(url).then(response => response.data);
+        },
+
+        createChat(chat) {
+            const url = `${API_URL}chats/`;
+            return axios.post(url, chat);
+        },
         sendMessage() {
             this.chatSocket.send(
                 JSON.stringify({
