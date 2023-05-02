@@ -1,5 +1,6 @@
 <template>
     <div class="appContent pt-2">
+        <a href="#" class="badge text-bg-primary" v-for="(user, index) in users" :key="index">{{ user.username }}</a>
 
         <div class="chatItem" v-for="(message, index) in messages" :key="index">
             <img src="/assets/img/sample/avatar6.jpg" alt="avatar" class="avatar">
@@ -104,7 +105,7 @@
 </template>
 
 <script >
-
+import axios from "axios";
 export default {
 
     data() {
@@ -112,12 +113,22 @@ export default {
             messages: [],
             chatSocket: null,
             message: null,
+            users:[]
         };
     },
 
     methods: {
+        getUsers() {
+            const url = `http://localhost:8000/users/`;
+            return axios.get(url).then((response) => {
+                    this.users = response.data;
+                })
+                .catch((error) => {
+                    error;
+                });
+        },
         getChats() {
-            const url = `${API_URL}chats/`;
+            const url = `http://localhost:8000/chats/`;
             return axios.get(url).then(response => response.data);
         },
 
@@ -135,6 +146,7 @@ export default {
         }
     },
     mounted() {
+        this.getUsers();
         this.chatSocket = new WebSocket(
             `ws://localhost:8000/ws/chat/new/`
         );
