@@ -2,90 +2,19 @@
     <div class="appContent pt-2">
         <a href="#" class="badge text-bg-primary" v-for="(user, index) in users" :key="index">{{ user.username }}</a>
 
-        <div class="chatItem" v-for="(message, index) in messages" :key="index">
-            <img src="/assets/img/sample/avatar6.jpg" alt="avatar" class="avatar">
+        <div class="chatItem" v-for="(message, index) in messages" :key="index" :class="getClass(message.user)">
+            <!-- <img src="/assets/img/sample/avatar6.jpg" alt="avatar" class="avatar"> -->
             <div class="content">
                 <div class="bubble">
-                    {{ message }}
+                    {{ message.message }}
                 </div>
-                <footer>6 mins ago</footer>
+                <footer>{{ message.created_at }}</footer>
             </div>
         </div>
 
-        <div class="chatItem user">
-            <div class="content">
-                <div class="bubble">
-                    Sure Will.
-                </div>
-            </div>
-        </div>
+        
 
-        <div class="chatItem user">
-            <div class="content">
-                <div class="bubble">
-                    About what?
-                </div>
-                <footer>5 mins ago</footer>
-            </div>
-        </div>
-
-        <div class="chatItem">
-            <img src="/assets/img/sample/avatar6.jpg" alt="avatar" class="avatar">
-            <div class="content">
-                <div class="bubble">
-                    <img src="/assets/img/sample/photo3.jpg" alt="image" class="imageBlock xlarge rounded">
-                </div>
-                <footer>2 mins ago</footer>
-            </div>
-        </div>
-
-
-        <div class="chatItem">
-            <img src="/assets/img/sample/avatar6.jpg" alt="avatar" class="avatar">
-            <div class="content">
-                <div class="bubble">
-                    Can you help me about photoshop?
-                </div>
-                <footer>1 mins ago</footer>
-            </div>
-        </div>
-
-        <div class="chatItem user">
-            <div class="content">
-                <div class="bubble">
-                    Lorem ipsum dolor sit amet
-                </div>
-                <footer>now</footer>
-            </div>
-        </div>
-
-        <div class="chatItem">
-            <img src="/assets/img/sample/avatar6.jpg" alt="avatar" class="avatar">
-            <div class="content">
-                <div class="bubble">
-                    Phasellus maximus dui a turpis porta, maximus lobortis magna pellentesque. Vivamus et justo eget
-                    augue pellentesque faucibus sed lacinia dui.
-                </div>
-                <footer>1 mins ago</footer>
-            </div>
-        </div>
-
-        <div class="chatItem user">
-            <div class="content">
-                <div class="bubble">
-                    Lorem ipsum dolor sit amet
-                </div>
-            </div>
-        </div>
-
-        <div class="chatItem user">
-            <div class="content">
-                <div class="bubble">
-                    Nam auctor tellus a urna vestibulum molestie bibendum non neque.
-                </div>
-                <footer>now</footer>
-            </div>
-        </div>
+      
 
         <div class="chatFooter">
             <div class="leftButton">
@@ -113,7 +42,8 @@ export default {
             messages: [],
             chatSocket: null,
             message: null,
-            users:[]
+            users: [],
+      
         };
     },
 
@@ -121,15 +51,20 @@ export default {
         getUsers() {
             const url = `http://localhost:8000/users/`;
             return axios.get(url).then((response) => {
-                    this.users = response.data;
-                })
+                this.users = response.data;
+            })
                 .catch((error) => {
                     error;
                 });
         },
         getChats() {
-            const url = `http://localhost:8000/chats/`;
-            return axios.get(url).then(response => response.data);
+            const url = `http://localhost:8000/api/v1/chat/`;
+            return axios.get(url).then((response) => {
+                this.messages = response.data;
+            })
+                .catch((error) => {
+                    error;
+                });
         },
 
         createChat(chat) {
@@ -137,30 +72,31 @@ export default {
             return axios.post(url, chat);
         },
         sendMessage() {
+            this.data_message ={
+                "message":this.message,
+                "user":1
+            }
             this.chatSocket.send(
-                JSON.stringify({
-                    message: this.message
-                })
+                JSON.stringify(this.data_message)
             );
+            this.messages.push(this.data_message);
             this.message = null;
+        },
+        getClass(userId) {
+            return userId === 1 ? 'user' : '';
         }
     },
     mounted() {
         this.getUsers();
+        this.getChats()
         this.chatSocket = new WebSocket(
             `ws://localhost:8000/ws/chat/new/`
         );
-        this.chatSocket.onmessage = e => {
-            const data = JSON.parse(e.data);
-            const message = data.message;
-            console.log(message)
-            this.messages.push(message);
-        };
-
         this.chatSocket.onclose = e => {
             console.error("chat socket closed unexpectedly!");
         };
     },
+
 
 
 
