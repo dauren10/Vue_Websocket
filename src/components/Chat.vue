@@ -1,6 +1,7 @@
 <template>
     <div class="appContent pt-2">
-        <a href="#" class="badge text-bg-primary" v-for="(user, index) in users" :key="index">{{ user.username }}</a>
+        <button  @click="recipient(user.id)" class="badge text-bg-primary" v-for="(user, index) in users"
+            :key="index">{{ user.username }}</button>
 
         <div class="chatItem" v-for="(message, index) in messages" :key="index" :class="getClass(message.user)">
             <!-- <img src="/assets/img/sample/avatar6.jpg" alt="avatar" class="avatar"> -->
@@ -12,9 +13,9 @@
             </div>
         </div>
 
-        
 
-      
+
+
 
         <div class="chatFooter">
             <div class="leftButton">
@@ -43,7 +44,7 @@ export default {
             chatSocket: null,
             message: null,
             users: [],
-      
+
         };
     },
 
@@ -72,18 +73,24 @@ export default {
             return axios.post(url, chat);
         },
         sendMessage() {
-            this.data_message ={
-                "message":this.message,
-                "user":1
+            this.data_message = {
+                "message": this.message,
+                "recipient": localStorage.getItem("recipient"),
             }
             this.chatSocket.send(
                 JSON.stringify(this.data_message)
             );
-            this.messages.push(this.data_message);
+            //this.messages.push(this.data_message);
             this.message = null;
         },
         getClass(userId) {
-            return userId === 1 ? 'user' : '';
+            let me = parseInt(localStorage.getItem("user_id"));
+            console.log(me)
+            console.log(userId)
+            return userId === me ? 'user' : '';
+        },
+        recipient(id){
+            localStorage.setItem("recipient",id)
         }
     },
     mounted() {
@@ -92,6 +99,13 @@ export default {
         this.chatSocket = new WebSocket(
             `ws://localhost:8000/ws/chat/new/`
         );
+
+        this.chatSocket.onmessage = e => {
+            const data = JSON.parse(e.data);
+            const message = data;
+            console.log(message)
+            this.messages.push(message);
+        };
         this.chatSocket.onclose = e => {
             console.error("chat socket closed unexpectedly!");
         };
